@@ -1,0 +1,17 @@
+carpet_area
+covered_area
+sqft_price
+bedroom
+bathroom
+balconies
+floor_no
+floors
+type_of_property
+commercial
+luxury_flat
+city
+area_name
+isprimelocationproperty
+furnished_type
+parking
+rera
