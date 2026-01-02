@@ -27,7 +27,6 @@ MODEL_PATH = "real_estate_model.pkl"
 ENCODER_PATH = "label_encoder.pkl"
 FEATURES_PATH = "model_features.txt"
 
-
 # ---------------- DOWNLOAD UTILITY ----------------
 def download_file(url: str, filename: str):
     if not os.path.exists(filename):
@@ -38,26 +37,23 @@ def download_file(url: str, filename: str):
             f.write(response.content)
 
 
-# ---------------- DOWNLOAD MODEL FILES ----------------
-download_file(MODEL_URL, MODEL_PATH)
-download_file(ENCODER_URL, ENCODER_PATH)
-download_file(FEATURES_URL, FEATURES_PATH)
+model = None
+label_encoders = None
+MODEL_FEATURES = None
 
+@app.on_event("startup")
+def load_artifacts():
+    global model, label_encoders, MODEL_FEATURES
 
-# ---------------- LOAD MODEL & ENCODERS ----------------
-model = joblib.load(MODEL_PATH,mmap_mode="r")
+    download_file(MODEL_URL, MODEL_PATH)
+    download_file(ENCODER_URL, ENCODER_PATH)
+    download_file(FEATURES_URL, FEATURES_PATH)
 
-# label_encoders is expected to be a dict like:
-# {
-#   "city": LabelEncoder(),
-#   "type_of_property": LabelEncoder(),
-#   ...
-# }
-label_encoders = joblib.load(ENCODER_PATH)
+    model = joblib.load(MODEL_PATH)
+    label_encoders = joblib.load(ENCODER_PATH)
 
-with open(FEATURES_PATH, "r") as f:
-    MODEL_FEATURES = [line.strip() for line in f.readlines()]
-
+    with open(FEATURES_PATH, "r") as f:
+        MODEL_FEATURES = [line.strip() for line in f.readlines()]
 
 # ---------------- CATEGORICAL FEATURES ----------------
 CATEGORICAL_FEATURES = [
@@ -113,15 +109,19 @@ def prepare_features(data: PropertyInput):
 
     return np.array(feature_vector, dtype=float).reshape(1, -1)
 
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
 
 # ---------------- PREDICTION ENDPOINT ----------------
 @app.post("/predict")
 def predict_price(data: PropertyInput):
     try:
-        X = prepare_features(data)
+        if model is None or MODEL_FEATURES is None:
+            raise HTTPException(status_code=503, detail="Model not loaded yet")
 
-        # Optional debug (remove later)
-        print("Feature vector:", X)
+        X = prepare_features(data)
 
         prediction = model.predict(X)[0]
 
