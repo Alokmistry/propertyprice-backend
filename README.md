@@ -7,9 +7,9 @@ It serves predictions to the frontend application and integrates a trained ML mo
 - FastAPI REST API
 - Machine Learning price prediction model
 - Model hosted on Hugging Face(The model files are dynamically downloaded from Hugging Face at runtime)
-- Production-ready deployment on Render
+- Deployed on Render
 
-
+## Hugging Face: Alok30m/mumbai-property-price-model
 
 
 
